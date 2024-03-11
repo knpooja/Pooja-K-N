@@ -1,0 +1,49 @@
+// Arduino code to interface LM35 temperature sensor and control onboard LED based on temperature
+
+// Pin definitions
+const int lm35Pin = A0;  // LM35 temperature sensor connected to analog pin A0
+const int ledPin = 13;   // Onboard LED connected to digital pin 13
+
+// Constants for temperature thresholds
+const int belowThreshold = 30;  // Threshold temperature below which LED blinks faster
+const int aboveThreshold = 30;  // Threshold temperature above which LED blinks slower
+
+// Variables to store temperature readings
+int temperature = 0;
+
+// Variables to track LED blinking intervals
+unsigned long previousMillis = 0;
+unsigned long interval = 0;
+
+void setup() {
+  pinMode(ledPin, OUTPUT);  // Set LED pin as output
+  Serial.begin(9600);       // Initialize serial communication for debugging
+}
+
+void loop() {
+  temperature = readTemperature();  // Read temperature from LM35 sensor
+
+  // Check temperature and set blinking interval accordingly
+  if (temperature < belowThreshold) {
+    interval = 250;  // Blink LED every 250 milliseconds
+  } else if (temperature > aboveThreshold) {
+    interval = 500;  // Blink LED every 500 milliseconds
+  }
+
+  // Blink LED based on interval
+  unsigned long currentMillis = millis();  // Get current time
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;  // Update previous time
+    digitalWrite(ledPin, !digitalRead(ledPin));  // Toggle LED state
+  }
+}
+
+// Function to read temperature from LM35 sensor
+int readTemperature() {
+  int raw = analogRead(lm35Pin);       // Read raw ADC value
+  float millivolts = (raw / 1023.0) * 5000;  // Convert raw value to millivolts
+  float celsius = millivolts / 10;     // Convert millivolts to Celsius
+  Serial.print("Temperature (C): ");
+  Serial.println(celsius);             // Print temperature to serial monitor
+  return celsius;                       // Return temperature in Celsius
+}
